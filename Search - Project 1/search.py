@@ -90,13 +90,13 @@ def depthFirstSearch(problem):
     fringe = util.Stack()
     curr = (problem.getStartState(), [], [])
     fringe.push(curr)
-    done = []
+    visit = []
     while not fringe.isEmpty():
         a, path, price = fringe.pop()
         if problem.isGoalState(a):
             return path
-        if not a in done:
-            done.append(a)
+        if not a in visit:
+            visit.append(a)
             for co, move, cost in problem.getSuccessors(a):
                 fringe.push((co, path + [move], price + [cost]))
 
@@ -104,12 +104,41 @@ def depthFirstSearch(problem):
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    fringe = util.Queue()
+    curr = (problem.getStartState(), [], [])
+    fringe.push(curr)
+    visit = []
+
+    while not fringe.isEmpty():
+        a, path, price = fringe.pop()
+        if problem.isGoalState(a):
+            return path
+        if not a in visit:
+            visit.append(a)
+            for co, move, cost in problem.getSuccessors(a):
+                fringe.push((co, path + [move], price + [cost]))
+
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    fringe = util.PriorityQueue()
+    counter = util.Counter()
+    curr = (problem.getStartState(), [])
+    fringe.push(curr, 0)
+    visit = []
+
+    while not fringe.isEmpty():
+        a, path = fringe.pop()
+        if problem.isGoalState(a):
+            return path
+        if not a in visit:
+            visit.append(a)
+            for co, move, cost in problem.getSuccessors(a):
+                counter[co] = counter[a]
+                counter[co] += cost
+                fringe.push((co, path + [move]), counter[co])
+    
 
 def nullHeuristic(state, problem=None):
     """
@@ -121,7 +150,25 @@ def nullHeuristic(state, problem=None):
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    fringe = util.PriorityQueue()
+    counter = util.Counter()
+    current = (problem.getStartState(), [])
+    visit = []
+    counter[str(current[0])] += heuristic(current[0], problem)
+    fringe.push(current, counter[str(current[0])])
+
+    while not fringe.isEmpty():
+        a, path = fringe.pop()
+        if problem.isGoalState(a):
+            return path
+        if not a in visit:
+            visit.append(a)
+            for co, move, cost in problem.getSuccessors(a):
+                temp = path + [move]
+                counter[str(co)] = problem.getCostOfActions(temp)
+                counter[str(co)] += heuristic(co, problem)
+                fringe.push((co, temp), counter[str(co)])
+
 
 
 # Abbreviations
