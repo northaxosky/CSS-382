@@ -34,6 +34,7 @@ description for details.
 Good luck and happy searching!
 """
 
+from json.encoder import INFINITY
 from game import Directions
 from game import Agent
 from game import Actions
@@ -288,6 +289,7 @@ class CornersProblem(search.SearchProblem):
         # Please add any code here which you would like to use
         # in initializing the problem
         "*** YOUR CODE HERE ***"
+        self.goal = ((1,1), (1,top), (right, 1), (right, top))
         self.startingGameState = startingGameState
 
     def getStartState(self):
@@ -296,22 +298,15 @@ class CornersProblem(search.SearchProblem):
         space)
         """
         "*** YOUR CODE HERE ***"
-        return (self.startingPosition, [])
+        state = (self.startingPosition, self.goal)
+        return state
 
     def isGoalState(self, state):
         """
         Returns whether this search state is a goal state of the problem.
         """
         "*** YOUR CODE HERE ***"
-        a = state[0]
-        visitCorner = state[1]
-
-        if a in self.corners:
-            if not a in visitCorner:
-                visitCorner.append(a)
-            return len(visitCorner) == 4
-        else:
-            return False
+        return not state[1]
 
     def getSuccessors(self, state):
         """
@@ -343,10 +338,9 @@ class CornersProblem(search.SearchProblem):
             if not hitsWall:
                 lGoal = list(lGoal)
                 pos = (nextx, nexty)
-                if pos in self.corners:
-                    if not pos in lGoal:
-                        lGoal.append(pos)
-
+                if pos in lGoal:
+                    lGoal.remove(pos)
+                lGoal = tuple(lGoal)
                 successors.append(((pos, lGoal), action, 1))
         self._expanded += 1 # DO NOT CHANGE
         return successors
@@ -382,7 +376,16 @@ def cornersHeuristic(state, problem):
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    position, grid = state
+    
+    if problem.isGoalState(state):
+        return 0
+    mazeDistances = []
+    for pos in grid:
+        mazeDistances.append(mazeDistance(position, pos, problem.startingGameState))
+    return max(mazeDistances)
+
+
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
