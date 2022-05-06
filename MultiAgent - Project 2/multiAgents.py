@@ -12,6 +12,7 @@
 # Pieter Abbeel (pabbeel@cs.berkeley.edu).
 
 
+from json.encoder import INFINITY
 from util import manhattanDistance
 from game import Directions
 import random, util
@@ -74,7 +75,21 @@ class ReflexAgent(Agent):
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
 
         "*** YOUR CODE HERE ***"
-        return successorGameState.getScore()
+        foodList = newFood.asList()
+        closestDistance = INFINITY
+        for food in foodList:
+            distance = manhattanDistance(newPos, food)
+            if distance <= closestDistance:
+                closestDistance = distance
+        
+        distGhost, proximityGhost = 1, 0
+        for state in successorGameState.getGhostPositions():
+            distance = manhattanDistance(newPos, state)
+            distGhost += distance
+            if distance <= 1:
+                proximityGhost += 1
+
+        return successorGameState.getScore() + (1 / float(closestDistance)) - (1 / float(distGhost)) - proximityGhost
 
 def scoreEvaluationFunction(currentGameState):
     """
@@ -135,7 +150,31 @@ class MinimaxAgent(MultiAgentSearchAgent):
         Returns whether or not the game state is a losing state
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        def minimax(agent, depth, state):
+            if depth == self.depth or gameState.isLose() or gameState.isWin():
+                return self.evaluationFunction(state)
+            if agent >= 1:  # minimizer
+                next = agent + 1
+                if next == 0 or state.getNumAgents() == next:
+                    depth += 1
+                return min(minimax(next, depth, state.generateSuccessor(agent, new)) for new in gameState.getLegalActions(agent))
+            else: # maximizer
+                return max(minimax(1, depth, state.generateSuccessor(agent, new)) for new in gameState.getLegalActions(agent))
+        
+        # at the root (Pacman)
+        max = -INFINITY
+        action = Directions.WEST
+        for aState in gameState.getLegalActions(0):
+            result = minimax(1, 0, gameState.generateSuccessor(0, aState))
+            if result > max:
+                max = result
+                action = aState
+        return action
+
+
+
+
+
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
