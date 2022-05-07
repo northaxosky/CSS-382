@@ -162,16 +162,18 @@ class MinimaxAgent(MultiAgentSearchAgent):
             else: 
                 return max(minimax(1, depth, gameState.generateSuccessor(agent, nextState)) for nextState in gameState.getLegalActions(agent))
 
-        """Performing maximize action for the root node i.e. pacman"""
-        maxScore = -INFINITY
-        action = Directions.NORTH
-        for aState in gameState.getLegalActions(0):
-            result = minimax(1, 0, gameState.generateSuccessor(0, aState))
-            if result > maxScore:
-                maxScore = result
-                action = aState
+        def root():
+            maxScore = -INFINITY
+            action = Directions.NORTH
+            for aState in gameState.getLegalActions(0):
+                result = minimax(1, 0, gameState.generateSuccessor(0, aState))
+                if result > maxScore:
+                    maxScore = result
+                    action = aState
+            return action
 
-        return action
+        if root:
+            return root()
 
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
@@ -184,7 +186,56 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        # minimizer
+        def minValue(agent, depth, gameState, alpha, beta):
+            next = agent + 1  
+            if gameState.getNumAgents() == next or next == 0:
+                next = 0
+                depth += 1
+            
+            val = INFINITY
+            for nextState in gameState.getLegalActions(agent):
+                val = min(val, prune(next, depth, gameState.generateSuccessor(agent, nextState), alpha, beta))
+                if val < alpha:
+                    return val
+                beta = min(beta, val)
+            return val
+    
+        # maximizer
+        def maxValue(agent, depth, gameState, alpha, beta):
+            val = -INFINITY
+            for nextState in gameState.getLegalActions(agent):
+                val = max(val, prune(1, depth, gameState.generateSuccessor(agent, nextState), alpha, beta))
+                if val > beta:
+                    return val
+                alpha = max(alpha, val)
+            return val
+
+        # prune
+        def prune(agent, depth, gameState, alpha, beta):
+            if gameState.isLose() or gameState.isWin() or depth == self.depth: 
+                return self.evaluationFunction(gameState)
+            if agent == 0:
+                return maxValue(agent, depth, gameState, alpha, beta)
+            else:
+                return minValue(agent, depth, gameState, alpha, beta)
+        
+        # initialize at root
+        def root():
+            score, alpha, beta = -INFINITY, -INFINITY, INFINITY
+            action, agent = Directions.NORTH, 0
+            for aState in gameState.getLegalActions(agent):
+                result = prune(1, 0, gameState.generateSuccessor(agent, aState), alpha, beta)
+                if result > score:
+                    score = result
+                    action = aState
+                if score > beta:
+                    return score
+                alpha = max(alpha, score)
+            return action
+
+        if root:
+            return root()
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
@@ -199,7 +250,13 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         legal moves.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        def expectimax(agent, depth, gameState):
+            pass
+        def root():
+            pass
+
+        if root:
+            return root()
 
 def betterEvaluationFunction(currentGameState):
     """
@@ -209,7 +266,6 @@ def betterEvaluationFunction(currentGameState):
     DESCRIPTION: <write something here so we know what you did>
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
 
 # Abbreviation
 better = betterEvaluationFunction
