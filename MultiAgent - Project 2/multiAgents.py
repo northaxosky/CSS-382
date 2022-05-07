@@ -150,30 +150,28 @@ class MinimaxAgent(MultiAgentSearchAgent):
         Returns whether or not the game state is a losing state
         """
         "*** YOUR CODE HERE ***"
-        def minimax(agent, depth, state):
-            if depth == self.depth or gameState.isLose() or gameState.isWin():
-                return self.evaluationFunction(state)
-            if agent != 0:  # minimizer
-                next = agent + 1
-                if next == 0 or state.getNumAgents() == next:
+        def minimax(agent, depth, gameState):
+            if gameState.isLose() or gameState.isWin() or depth == self.depth: 
+                return self.evaluationFunction(gameState)
+            if agent != 0:  
+                next = agent + 1  
+                if gameState.getNumAgents() == next or next == 0:
+                    next = 0
                     depth += 1
-                return min(minimax(next, depth, state.generateSuccessor(agent, new)) for new in gameState.getLegalActions(agent))
-            else: # maximizer
-                return max(minimax(1, depth, state.generateSuccessor(agent, new)) for new in gameState.getLegalActions(agent))
-        
-        # at the root (Pacman)
-        max = -INFINITY
-        action = Directions.WEST
+                return min(minimax(next, depth, gameState.generateSuccessor(agent, nextState)) for nextState in gameState.getLegalActions(agent))
+            else: 
+                return max(minimax(1, depth, gameState.generateSuccessor(agent, nextState)) for nextState in gameState.getLegalActions(agent))
+
+        """Performing maximize action for the root node i.e. pacman"""
+        maxScore = -INFINITY
+        action = Directions.NORTH
         for aState in gameState.getLegalActions(0):
             result = minimax(1, 0, gameState.generateSuccessor(0, aState))
-            if result > max:
-                max = result
+            if result > maxScore:
+                maxScore = result
                 action = aState
+
         return action
-
-
-
-
 
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
