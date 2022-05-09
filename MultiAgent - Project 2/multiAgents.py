@@ -13,6 +13,7 @@
 
 
 from json.encoder import INFINITY
+from re import A
 from util import manhattanDistance
 from game import Directions
 import random, util
@@ -215,10 +216,10 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         def prune(agent, depth, gameState, alpha, beta):
             if gameState.isLose() or gameState.isWin() or depth == self.depth: 
                 return self.evaluationFunction(gameState)
-            if agent == 0:
-                return maxValue(agent, depth, gameState, alpha, beta)
-            else:
+            if agent != 0:
                 return minValue(agent, depth, gameState, alpha, beta)
+            else:
+                return maxValue(agent, depth, gameState, alpha, beta)
         
         # initialize at root
         def root():
@@ -251,9 +252,26 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         """
         "*** YOUR CODE HERE ***"
         def expectimax(agent, depth, gameState):
-            pass
+            if gameState.isWin() or gameState.isLose() or depth == self.depth:
+                return self.evaluationFunction(gameState)
+            if agent  != 0:
+                next = agent + 1
+                if gameState.getNumAgents() == next or next == 0:
+                    next = 0
+                    depth += 1
+                numActions = len(gameState.getLegalActions(agent))
+                return sum(expectimax(next, depth, gameState.generateSuccessor(agent, nextState)) for nextState in gameState.getLegalActions(agent)) / numActions
+            else:
+                return max(expectimax(1, depth, gameState.generateSuccessor(agent, nextState)) for nextState in gameState.getLegalActions(agent))
+
         def root():
-            pass
+            maxVal, action, agent = -INFINITY, Directions.NORTH, 0
+            for aState in gameState.getLegalActions(agent):
+                result = expectimax(1, agent, gameState.generateSuccessor(agent, aState))
+                if result > maxVal:
+                    maxVal = result
+                    action = aState
+            return action
 
         if root:
             return root()
@@ -265,7 +283,38 @@ def betterEvaluationFunction(currentGameState):
 
     DESCRIPTION: <write something here so we know what you did>
     """
-    "*** YOUR CODE HERE ***"
+    def ghostScore(gameState):
+        score = 0
+        for ghost in gameState.getGhostStates():
+            distance = manhattanDistance(gameState.getPacmanPosition(), ghost.getPosition())
+            if distance > 0:
+                if ghost.scaredTimer > 0:
+                    score += (8 - distance) * (8 - distance)
+                else:
+                    score -= (8 - distance) * (8 - distance)
+        return score
+                
+    def foodScore(gameState):
+        score = 0
+        for food in gameState.getFood().asList():
+            distScore = 1.0 / manhattanDistance(gameState.getPacmanPosition(), food)
+            if distScore > score:
+               score = distScore
+        return score   
+
+    def capsuleScore(gameState):
+        score = 0
+        for capsule in gameState.getCapsules():
+            distScore = 50.0 / manhattanDistance(gameState.getPacmanPosition(), capsule)
+            if distScore > score:
+                score = distScore
+        return score
+    
+    score = currentGameState.getScore()
+    gScore = ghostScore(currentGameState)
+    fScore = foodScore(currentGameState)
+    cScore = capsuleScore(currentGameState)
+    return score + gScore + fScore + cScore
 
 # Abbreviation
 better = betterEvaluationFunction
